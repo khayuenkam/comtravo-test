@@ -5,13 +5,14 @@ const app = express();
 
 app.use('/api', Routes.router);
 
+// TODO: Centralized Error
 app.use((_, res) => {
   res.status(404).send({
     error: {
-      message: 'Unrecognized request url'
-    }
+      message: 'Unrecognized request url',
+    },
   });
-})
+});
 
 app.listen(3000, () => {
   console.log('App listening on port 3000');
