@@ -26,4 +26,4 @@ function getUniqueFlights(flights: IFlight[]): Record<string, IFlight> {
   );
 }
 
-export { getFlights };
+export { getFlights, getUniqueFlights };

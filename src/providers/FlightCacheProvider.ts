@@ -36,7 +36,7 @@ export default class FlightCacheProvider {
     const data = cache.get<IFlight[]>(key);
 
     if (data) {
-      console.log('Hit cache')
+      console.log('Hit cache');
       return data;
     }
 
@@ -44,7 +44,10 @@ export default class FlightCacheProvider {
       const flights = await DiscoveryStubGateway.getFirstSourceFlights();
       cache.set(key, flights, cacheTtl);
       return flights;
-    } catch {
+    } catch (err) {
+      console.log(
+        `Failed to get data from source: message=${err.message}. Fallback to []`,
+      );
       return [];
     }
   }
@@ -57,7 +60,7 @@ export default class FlightCacheProvider {
     const data = cache.get<IFlight[]>(key);
 
     if (data) {
-      console.log('Hit cache')
+      console.log('Hit cache');
       return data;
     }
 
@@ -65,7 +68,10 @@ export default class FlightCacheProvider {
       const flights = await DiscoveryStubGateway.getSecondSourceFlights();
       cache.set(key, flights, cacheTtl);
       return flights;
-    } catch {
+    } catch (err) {
+      console.log(
+        `Failed to get data from source: message=${err.message}. Fallback to []`,
+      );
       return [];
     }
   }

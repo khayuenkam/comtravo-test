@@ -7,13 +7,14 @@ Comtravo Test
 3. `curl http://localhost:3000/api/v1/flights`
 
 ### Run tests
-TODO
+1. `npm install`
+2. `npm test`
 
 ### Decision Made
 Flights are cached in in-memory. In real world case, flights are rarely changed/cancelled. Therefore, I have
 used Read-through strategy for caching since the service is focused on reading flights.
 
-Secondly, if one of the endpoints is failing, the service will still return the other endpoint's result. Only
+Secondly, if one of the endpoints is failing, the service will still return the successful endpoint's result. Only
 two endpoints are failing, then we will return 500.
 
 ### Improvements

@@ -1,7 +1,7 @@
-import express from 'express';
+import Router from 'express-promise-router';
 import { getFlights } from '../../controllers/flightController';
 
-const router = express.Router();
+const router = Router();
 
 router.get('/flights', getFlights);
 
