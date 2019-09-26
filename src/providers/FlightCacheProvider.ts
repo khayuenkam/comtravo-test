@@ -5,8 +5,9 @@ import Config from './Config';
 
 /**
  *  Singleton object for FlightCacheProvider. This is implemented using Read-through
- *  cache strategy. If cache is missed, will request gateway to fetch data. There is also
- *  retry strategy when requesting gateway.
+ *  cache strategy. If cache is missed, will request gateway to fetch data.
+ *
+ * TO_IMRPOVE: Should not use singleton and initialized at bootstrap and then inject as argument. Easier to test.
  */
 export default class FlightCacheProvider {
   private static instance: FlightCacheProvider;
