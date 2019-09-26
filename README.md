@@ -20,3 +20,7 @@ two endpoints are failing, then we will return 500.
 ### Improvements
 I think the crawler job can move away from this http service. So that the service is only focused on hitting cache/data store
 for flights.
+
+### Notes
+Overall, the response time should be less than 10ms, however, this depends on the cache TTL. If without cache, the response time
+will be vary, since the third party API is not stable.
