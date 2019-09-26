@@ -1,33 +1,29 @@
-import { Observable, merge } from 'rxjs';
-import { scan } from 'rxjs/operators';
-import { Flight } from '../models/Flight';
-import { FlightCacheProvider } from '../FlightCacheProvider';
+import { IFlight, generateFlightId } from '../models/Flight';
+import FlightCacheProvider from '../providers/FlightCacheProvider';
 
-function getFlights(cacheProvider: FlightCacheProvider): Observable<any> {
-  return merge(
+async function getFlights(
+  cacheProvider: FlightCacheProvider,
+): Promise<IFlight[]> {
+  const flights = await Promise.all([
     cacheProvider.getFirstSourceFlights(),
     cacheProvider.getSecondSourceFlights(),
-  ).pipe(
-    scan(
-      (acc, flight) => {
-        const flightKey = generateFlightId(flight);
-        acc[flightKey] = flight;
-        return acc;
-      },
-      {} as any,
-    ),
-  );
+  ]);
+  const flattenFlights = flights.reduce((a, b) => a.concat(b), []);
+  const uniqueFlights = getUniqueFlights(flattenFlights);
+
+  return Object.values(uniqueFlights);
 }
 
-/**
- *
- * @param flight
- */
-function generateFlightId(flight: Flight): string {
-  return flight.slices.reduce((acc, slice, index) => {
-    const sliceKey = `${slice.flight_number}:${slice.departure_date_time_utc}`;
-    return index === 0 ? sliceKey : `${acc}_${sliceKey}`;
-  }, '');
+function getUniqueFlights(flights: IFlight[]): Record<string, IFlight> {
+  return flights.reduce(
+    (acc, flight) => {
+      const flightKey = generateFlightId(flight);
+      acc[flightKey] = flight;
+
+      return acc;
+    },
+    {} as Record<string, IFlight>,
+  );
 }
 
 export { getFlights };

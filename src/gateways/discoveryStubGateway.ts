@@ -1,38 +1,51 @@
-import axios from 'axios';
-import { Observable, from, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { Flight } from '../models/Flight';
+import axios, { AxiosRequestConfig } from 'axios';
+import axiosRetry, { IAxiosRetryConfig, exponentialDelay } from 'axios-retry';
+import { IFlight } from '../models/Flight';
+import Config from '../providers/Config';
 
-const FIRST_SOURCE_URL = 'https://discovery-stub.comtravo.com/source1';
-const SECOND_SOURCE_URL = 'https://discovery-stub.comtravo.com/source2';
+type AxiosOptions = AxiosRequestConfig & { 'axios-retry': IAxiosRetryConfig };
 
-function getRxFirstSource(): Observable<Flight[]> {
-  return from(axios.get(FIRST_SOURCE_URL)).pipe(
-    map(response => response.data),
-    map(data => data.flights),
-    catchError(error => {
-      console.log('Failed to request first source: ', error.message);
-      return throwError(error);
-    }),
-  );
+const BASE_URL = 'https://discovery-stub.comtravo.com';
+const FIRST_SOURCE_PATH = '/source1';
+const SECOND_SOURCE_PATH = '/source2';
+
+const config = Config.getInstance().getConfig();
+const defaultAxiosRetryConfig = {
+  retries: 1,
+  retryDelay: exponentialDelay,
+};
+const client = axios.create({ baseURL: BASE_URL });
+axiosRetry(client);
+
+async function getFlights(
+  path: string,
+  options: AxiosOptions,
+): Promise<IFlight[]> {
+  try {
+    const { data } = await client.get(path, options);
+    return data.flights;
+  } catch (error) {
+    console.log(
+      `Failed to request flights: messages=${error.message}, path=${path}`,
+    );
+    throw error;
+  }
 }
 
-function getRxSecondSource(): Observable<Flight[]> {
-  return from(
-    axios.get(SECOND_SOURCE_URL, {
-      auth: {
-        username: 'ct_interviewee',
-        password: 'supersecret',
-      },
-    }),
-  ).pipe(
-    map(response => response.data),
-    map(data => data.flights),
-    catchError(error => {
-      console.log('Failed to request second source: ', error.message);
-      return throwError(error);
-    }),
-  );
+function getFirstSourceFlights(): Promise<IFlight[]> {
+  return getFlights(FIRST_SOURCE_PATH, {
+    'axios-retry': defaultAxiosRetryConfig,
+  });
 }
 
-export { getRxFirstSource, getRxSecondSource };
+function getSecondSourceFlights(): Promise<IFlight[]> {
+  return getFlights(SECOND_SOURCE_PATH, {
+    auth: {
+      username: config.username,
+      password: config.password,
+    },
+    'axios-retry': defaultAxiosRetryConfig,
+  });
+}
+
+export { getFirstSourceFlights, getSecondSourceFlights, getFlights };

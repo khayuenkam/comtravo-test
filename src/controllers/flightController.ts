@@ -1,21 +1,24 @@
-import { Request, Response } from 'express';
-import {} from 'rxjs';
+import { Request, Response, NextFunction } from 'express';
 import * as FlightService from '../services/flightService';
-import { FlightCacheProvider } from '../FlightCacheProvider';
+import FlightCacheProvider from '../providers/FlightCacheProvider';
+import Config from '../providers/Config';
+import { NoFlightsError } from '../errors/NoFlightsError';
 
-const cacheProvider = new FlightCacheProvider();
-function getFlights(_: Request, res: Response): void {
-  FlightService.getFlights(cacheProvider)
-    .toPromise()
-    .then(
-      result => {
-        res.send(result);
-      },
-      (err) => {
-        console.log('Controller', err)
-        res.sendStatus(500);
-      },
-    );
+function getFlights(_: Request, res: Response, next: NextFunction): void {
+  const config = Config.getInstance();
+  const cacheProvider = FlightCacheProvider.getInstance(config);
+
+  FlightService.getFlights(cacheProvider).then(
+    result => {
+      if (result.length > 0) {
+        res.json(result);
+      } else {
+        const error = new NoFlightsError('No flights');
+        next(error);
+      }
+    },
+    err => next(err),
+  );
 }
 
 export { getFlights };
